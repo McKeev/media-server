@@ -102,7 +102,7 @@ services:
       - PGID=${PGID}
       - TZ=${TZ}
       - VERSION=docker
-      - PLEX_CLAIM= claim-yLWggQgihK-vyy9xmCL-
+      - PLEX_CLAIM=${PLEX_CLAIM}
     volumes:
       - ${CONFIG_DIR}/plex:/config
       - ${MEDIA_DIR}/content/series:/tv
