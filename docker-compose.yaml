@@ -1,0 +1,94 @@
+services:
+  sonarr:  # Points to series
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG_DIR}/sonarr:/config
+      - ${MEDIA_DIR}/content/series:/tv
+      - ${MEDIA_DIR}/downloads:/downloads
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+
+  radarr:  # Points to movies
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG_DIR}/radarr:/config
+      - ${MEDIA_DIR}/content/movies:/movies
+      - ${MEDIA_DIR}/downloads:/downloads
+    ports:
+      - 7878:7878
+    restart: unless-stopped
+
+  prowlarr:  # Indexer
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+    volumes:
+      - ${CONFIG_DIR}/prowlarr:/config
+    ports:
+      - 9696:9696
+    restart: unless-stopped
+
+  flaresolverr:  # Solves captchas
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - TZ=${TZ}
+    ports:
+      - "8191:8191"
+    restart: unless-stopped
+
+  gluetun:
+    container_name: gluetun  # VPN Tunnel
+    image: qmcgaw/gluetun
+    restart: unless-stopped
+
+    cap_add:
+      - NET_ADMIN  # Needed for OpenVPN
+
+    ports:
+      - "8080:8080"  # qBittorrent web UI
+      - "6881:6881"
+      - "6881:6881/udp"
+
+    volumes:
+      - ${CONFIG_DIR}/gluetun:/gluetun
+
+    environment:
+      - VPN_SERVICE_PROVIDER=nordvpn
+      - OPENVPN_USER=${NORD_USER}
+      - OPENVPN_PASSWORD=${NORD_PASS}
+      - SERVER_COUNTRIES=${COUNTRY}  # Any Nord P2P region
+      - SERVER_CATEGORIES=P2P  # Force P2P-capable servers only
+      - TZ=${TZ}
+
+  qbittorrent:  # Download client
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
+    network_mode: "service:gluetun"
+    depends_on:
+      - gluetun
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=6881
+    volumes:
+      - ${CONFIG_DIR}/qbittorrent:/config
+      - ${MEDIA_DIR}/downloads:/downloads
+    restart: unless-stopped
