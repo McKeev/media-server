@@ -92,3 +92,19 @@ services:
       - ${CONFIG_DIR}/qbittorrent:/config
       - ${MEDIA_DIR}/downloads:/downloads
     restart: unless-stopped
+
+  plex:
+    image: lscr.io/linuxserver/plex:latest
+    container_name: plex
+    network_mode: host
+    environment:
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - TZ=${TZ}
+      - VERSION=docker
+      - PLEX_CLAIM= claim-yLWggQgihK-vyy9xmCL-
+    volumes:
+      - ${CONFIG_DIR}/plex:/config
+      - ${MEDIA_DIR}/content/series:/tv
+      - ${MEDIA_DIR}/content/movies:/movies
+    restart: unless-stopped
