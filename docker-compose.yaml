@@ -52,6 +52,50 @@ services:
       - "8191:8191"
     restart: unless-stopped
 
+  qbittorrent:
+    image: ghcr.io/hotio/qbittorrent
+    container_name: qbittorrent
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/net/tun:/dev/net/tun
+    sysctls:
+      - net.ipv4.conf.all.src_valid_mark=1
+      - net.ipv6.conf.all.disable_ipv6=1
+    environment:
+      - TZ=${TZ}
+      - PUID=${PUID}
+      - PGID=${PGID}
+      - UMASK=002
+      - WEBUI_PORTS=8080/tcp,8080/udp
+      - LIBTORRENT=v1
+
+      # VPN
+      - VPN_ENABLED=true
+      - VPN_PROVIDER=pia
+      - VPN_CONF=wg0
+
+      - VPN_PIA_USER=${PIA_USER}
+      - VPN_PIA_PASS=${PIA_PASS}
+      - VPN_PIA_PREFERRED_REGION=${PIA_REGION}
+
+      - VPN_AUTO_PORT_FORWARD=true
+      - VPN_FIREWALL_TYPE=auto
+      - VPN_LAN_NETWORK=${LAN_SUBSET}
+      - VPN_EXPOSE_PORTS_ON_LAN=true
+
+      - VPN_LAN_LEAK_ENABLED=false
+      - VPN_HEALTHCHECK_ENABLED=false
+
+    volumes:
+      - ${CONFIG_DIR}/qbittorrent:/config
+      - ${MEDIA_DIR}/downloads:/data
+
+    ports:
+      - 8080:8080
+
+    restart: unless-stopped
+
   plex:
     image: lscr.io/linuxserver/plex:latest
     container_name: plex
@@ -67,63 +111,3 @@ services:
       - ${MEDIA_DIR}/content/series:/tv
       - ${MEDIA_DIR}/content/movies:/movies
     restart: unless-stopped
-
-  gluetun:
-    image: qmcgaw/gluetun
-    container_name: gluetun
-    restart: unless-stopped
-    cap_add:
-      - NET_ADMIN
-    devices:
-      - /dev/net/tun
-    ports:
-      - 8080:8080     # qBittorrent web UI
-      - 6881:6881     # Torrenting TCP
-      - 6881:6881/udp # Torrenting UDP
-    volumes:
-      - ${CONFIG_DIR}/gluetun:/gluetun
-    environment:
-      - VPN_SERVICE_PROVIDER=pia
-      - VPN_TYPE=wireguard
-      - OPENVPN_USER=${PIA_USER}
-      - OPENVPN_PASSWORD=${PIA_PASS}
-      - SERVER_REGIONS=${PIA_REGION}
-      - VPN_PORT_FORWARDING=on
-      - VPN_PORT_FORWARDING_PROVIDER=pia
-      - VPN_PORT_FORWARDING_STATUS_FILE=/gluetun/forwarded_port
-      - FIREWALL_OUTBOUND_SUBNETS=192.168.1.0/24,100.64.0.0/10
-      - DOT_PROVIDERS=cloudflare,google
-      - TZ=${TZ}
-      - LOG_LEVEL=info
-
-  gluetun-qbittorrent-port-manager:
-    image: patrickaclark/gluetun-qbittorrent-port-manager:latest
-    container_name: qb-port-manager
-    restart: unless-stopped
-    network_mode: service:gluetun
-    environment:
-      - QBITTORRENT_SERVER=localhost
-      - QBITTORRENT_PORT=8080
-      - PORT_FORWARDED=/gluetun/forwarded_port
-      - HTTP_S=http
-      - GLUETUN_HOST=localhost
-      - GLUETUN_PORT=8000
-      - RECHECK_TIME=60
-      - TZ=${TZ}
-
-  qbittorrent:
-    image: lscr.io/linuxserver/qbittorrent:latest
-    container_name: qbittorrent
-    network_mode: service:gluetun
-    depends_on:
-      - gluetun
-    environment:
-      - PUID=${PUID}
-      - PGID=${PGID}
-      - TZ=${TZ}
-      - WEBUI_PORT=8080
-    volumes:
-      - ${CONFIG_DIR}/qbittorrent:/config
-      - ${MEDIA_DIR}/downloads:/downloads
-    restart: unless-stopped
-
