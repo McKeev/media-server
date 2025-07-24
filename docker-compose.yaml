@@ -53,28 +53,25 @@ services:
     restart: unless-stopped
 
   gluetun:
-    container_name: gluetun  # VPN Tunnel
     image: qmcgaw/gluetun
-    restart: unless-stopped
-
+    container_name: gluetun # VPN tunnel
     cap_add:
-      - NET_ADMIN  # Needed for OpenVPN
-
+      - NET_ADMIN
     ports:
-      - "8080:8080"  # qBittorrent web UI
-      - "6881:6881"
-      - "6881:6881/udp"
-
+      - "8080:8080"   # qBittorrent Web UI
+      - "6881:6881"   # Torrent port TCP
+      - "6881:6881/udp"  # Torrent port UDP
+    environment:
+      - VPN_SERVICE_PROVIDER=private internet access
+      - OPENVPN_USER=${PIA_USER}
+      - OPENVPN_PASSWORD=${PIA_PASS}
+      - REGION=${PIA_REGION}
+      - PORT_FORWARDING=on
+      - TZ=${TZ}
+      - DOT=on
     volumes:
       - ${CONFIG_DIR}/gluetun:/gluetun
-
-    environment:
-      - VPN_SERVICE_PROVIDER=nordvpn
-      - OPENVPN_USER=${NORD_USER}
-      - OPENVPN_PASSWORD=${NORD_PASS}
-      - SERVER_COUNTRIES=${COUNTRY}  # Any Nord P2P region
-      - SERVER_CATEGORIES=P2P  # Force P2P-capable servers only
-      - TZ=${TZ}
+    restart: unless-stopped
 
   qbittorrent:  # Download client
     image: lscr.io/linuxserver/qbittorrent:latest
