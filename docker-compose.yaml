@@ -82,7 +82,6 @@ services:
       - VPN_AUTO_PORT_FORWARD=true
       - VPN_FIREWALL_TYPE=auto
       - VPN_LAN_NETWORK=${LAN_SUBSET}
-      - VPN_EXPOSE_PORTS_ON_LAN=true
 
       - VPN_LAN_LEAK_ENABLED=false
       - VPN_HEALTHCHECK_ENABLED=false
