@@ -8,8 +8,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_DIR}/sonarr:/config
-      - ${MEDIA_DIR}/content/series:/tv
-      - ${MEDIA_DIR}/downloads:/downloads
+      - ${MEDIA_DIR}:/data
     ports:
       - "8989:8989"
     restart: unless-stopped
@@ -23,8 +22,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ${CONFIG_DIR}/radarr:/config
-      - ${MEDIA_DIR}/content/movies:/movies
-      - ${MEDIA_DIR}/downloads:/downloads
+      - ${MEDIA_DIR}:/data
     ports:
       - 7878:7878
     restart: unless-stopped
@@ -88,7 +86,7 @@ services:
 
     volumes:
       - ${CONFIG_DIR}/qbittorrent:/config
-      - ${MEDIA_DIR}/downloads:/data
+      - ${MEDIA_DIR}:/data
 
     ports:
       - 8080:8080
